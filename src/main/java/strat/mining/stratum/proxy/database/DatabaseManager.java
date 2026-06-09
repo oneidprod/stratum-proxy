@@ -104,15 +104,23 @@ public class DatabaseManager {
 			poolDatabase.close();
 			userDatabase.close();
 
-			DefragmentConfig poolConfig = new DefragmentConfig(poolDatabaseFile.getAbsolutePath());
-			poolConfig.forceBackupDelete(true);
-			Defragment.defrag(poolConfig);
+			try {
+				DefragmentConfig poolConfig = new DefragmentConfig(poolDatabaseFile.getAbsolutePath());
+				poolConfig.forceBackupDelete(true);
+				Defragment.defrag(poolConfig);
+			} catch (Exception e) {
+				LOGGER.error("Error defragmenting pool database.", e);
+			}
 
-			DefragmentConfig userConfig = new DefragmentConfig(userDatabaseFile.getAbsolutePath());
-			userConfig.forceBackupDelete(true);
-			Defragment.defrag(userConfig);
+			try {
+				DefragmentConfig userConfig = new DefragmentConfig(userDatabaseFile.getAbsolutePath());
+				userConfig.forceBackupDelete(true);
+				Defragment.defrag(userConfig);
+			} catch (Exception e) {
+				LOGGER.error("Error defragmenting user database.", e);
+			}
 		} catch (Exception e) {
-			LOGGER.error("Error during defragmentation.", e);
+			LOGGER.error("Error closing databases before defragmentation.", e);
 		} finally {
 			try {
 				poolDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), poolDatabaseFile.getAbsolutePath());
