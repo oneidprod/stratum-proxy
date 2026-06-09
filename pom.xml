@@ -270,7 +270,7 @@
 				<version>2.3.2</version>
 				<executions>
 					<execution>
-						<phase>compile</phase>
+						<phase>none</phase>
 						<goals>
 							<goal>generate</goal>
 						</goals>
