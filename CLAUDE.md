@@ -74,6 +74,7 @@ done
 ### Session 2 - next
 
 ### Session 1 - 2026-06-09 (complete)
+
 - Diagnosed memory growth: db4o never reclaims space after record deletion
 - Decided on periodic defrag via `DatabaseManager.defragment()` + daily timer in `HashrateRecorder`
 - Implemented all 4 tasks on branch `feature/db4o-defrag`: synchronized DatabaseManager, added defragment(), daily HashrateRecorder timer, built and deployed jar to all 17 instances
