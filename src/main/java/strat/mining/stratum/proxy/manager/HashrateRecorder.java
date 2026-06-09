@@ -45,11 +45,13 @@ public class HashrateRecorder {
 
 	private static Integer CAPTURE_PERIOD = ConfigurationManager.getInstance().getHashrateDatabaseSamplingPeriod() * 1000;
 	private static Long OLD_RECORDS_OFFSET = ConfigurationManager.getInstance().getHashrateDatabaseHistoryDepth() * 86400L * 1000;
+	private static final long DEFRAG_PERIOD = 24 * 60 * 60 * 1000L;
 
 	private ProxyManager stratumProxyManager;
 	private DatabaseManager databaseManager;
 
 	private Task captureTask;
+	private Task defragTask;
 
 	private HashrateRecorder() {
 		stratumProxyManager = ProxyManager.getInstance();
@@ -69,6 +71,7 @@ public class HashrateRecorder {
 	public void startCapture() {
 		stopCapture();
 		scheduleTask();
+		scheduleDefragTask();
 	}
 
 	/**
@@ -91,6 +94,25 @@ public class HashrateRecorder {
 	}
 
 	/**
+	 * Schedule the defragmentation task.
+	 */
+	private void scheduleDefragTask() {
+		defragTask = new Task() {
+			public void run() {
+				try {
+					LOGGER.info("Running scheduled database defragmentation.");
+					databaseManager.defragment();
+				} catch (Exception e) {
+					LOGGER.error("Error during scheduled database defragmentation.", e);
+				}
+				scheduleDefragTask();
+			}
+		};
+		defragTask.setName("DatabaseDefragTask");
+		Timer.getInstance().schedule(defragTask, DEFRAG_PERIOD);
+	}
+
+	/**
 	 * Stop the capture task.
 	 */
 	public void stopCapture() {
@@ -98,6 +120,11 @@ public class HashrateRecorder {
 			LOGGER.debug("Stopping hashrate capture.");
 			captureTask.cancel();
 			captureTask = null;
+		}
+		if (defragTask != null) {
+			LOGGER.debug("Stopping database defrag task.");
+			defragTask.cancel();
+			defragTask = null;
 		}
 	}
 
