@@ -96,7 +96,7 @@ public class DatabaseManager {
 	/**
 	 * Close all the databases
 	 */
-	public synchronized void closeAllDBs() {
+	private synchronized void closeAllDBs() {
 		poolDatabase.close();
 		userDatabase.close();
 	}
