@@ -40,6 +40,8 @@ public class DatabaseManager {
 
 	private ObjectContainer poolDatabase;
 	private ObjectContainer userDatabase;
+	private File poolDatabaseFile;
+	private File userDatabaseFile;
 
 	private DatabaseManager() throws FileNotFoundException {
 		LOGGER.info("Starting DatabaseManager...");
@@ -51,11 +53,10 @@ public class DatabaseManager {
 			}
 		}
 
-		// Remove the old neodatis files if they exist.
 		removeNeodatisFiles(databaseDirectory);
 
-		File poolDatabaseFile = new File(databaseDirectory, "dbpools");
-		File userDatabaseFile = new File(databaseDirectory, "dbusers");
+		poolDatabaseFile = new File(databaseDirectory, "dbpools");
+		userDatabaseFile = new File(databaseDirectory, "dbusers");
 
 		poolDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), poolDatabaseFile.getAbsolutePath());
 		userDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), userDatabaseFile.getAbsolutePath());
@@ -95,7 +96,7 @@ public class DatabaseManager {
 	/**
 	 * Close all the databases
 	 */
-	protected void closeAllDBs() {
+	public synchronized void closeAllDBs() {
 		poolDatabase.close();
 		userDatabase.close();
 	}
@@ -107,7 +108,7 @@ public class DatabaseManager {
 	 * @param poolHost
 	 * @return
 	 */
-	public List<HashrateModel> getPoolHashrate(final String poolHost) {
+	public synchronized List<HashrateModel> getPoolHashrate(final String poolHost) {
 		return getPoolHashrate(poolHost, null, null);
 	}
 
@@ -123,7 +124,7 @@ public class DatabaseManager {
 	 *            may be null, else a timestamp in seconds from Epoch
 	 * @return
 	 */
-	public List<HashrateModel> getPoolHashrate(final String poolHost, Long startTimestamp, Long endTimestamp) {
+	public synchronized List<HashrateModel> getPoolHashrate(final String poolHost, Long startTimestamp, Long endTimestamp) {
 		final Long startTimestampMs = startTimestamp != null ? startTimestamp * 1000L : null;
 		final Long endTimestampMs = endTimestamp != null ? endTimestamp * 1000L : null;
 		return poolDatabase.query(new Predicate<HashrateModel>() {
@@ -142,7 +143,7 @@ public class DatabaseManager {
 	 * @param poolHost
 	 * @return
 	 */
-	public List<HashrateModel> getUserHashrate(final String username) {
+	public synchronized List<HashrateModel> getUserHashrate(final String username) {
 		return getUserHashrate(username, null, null);
 	}
 
@@ -152,7 +153,7 @@ public class DatabaseManager {
 	 * @param poolHost
 	 * @param model
 	 */
-	public void insertPoolHashrate(HashrateModel model) {
+	public synchronized void insertPoolHashrate(HashrateModel model) {
 		poolDatabase.store(model);
 		poolDatabase.commit();
 	}
@@ -163,7 +164,7 @@ public class DatabaseManager {
 	 * @param username
 	 * @param model
 	 */
-	public void insertUserHashrate(HashrateModel model) {
+	public synchronized void insertUserHashrate(HashrateModel model) {
 		userDatabase.store(model);
 		userDatabase.commit();
 	}
@@ -174,7 +175,7 @@ public class DatabaseManager {
 	 * @param username
 	 * @param olderThan
 	 */
-	public void deleteOldPoolsHashrate(final Long olderThan) {
+	public synchronized void deleteOldPoolsHashrate(final Long olderThan) {
 		List<HashrateModel> hashrates = poolDatabase.query(new Predicate<HashrateModel>() {
 			public boolean match(HashrateModel hashrateModel) {
 				return hashrateModel.getCaptureTime() < olderThan;
@@ -193,7 +194,7 @@ public class DatabaseManager {
 	 * @param username
 	 * @param olderThan
 	 */
-	public void deleteOldUsersHashrate(final Long olderThan) {
+	public synchronized void deleteOldUsersHashrate(final Long olderThan) {
 		List<HashrateModel> hashrates = userDatabase.query(new Predicate<HashrateModel>() {
 			public boolean match(HashrateModel hashrateModel) {
 				return hashrateModel.getCaptureTime() < olderThan;
@@ -239,7 +240,7 @@ public class DatabaseManager {
 	 * 
 	 * @param host
 	 */
-	public void deletePool(String host) {
+	public synchronized void deletePool(String host) {
 		List<HashrateModel> hashrates = getPoolHashrate(host);
 		if (hashrates != null) {
 			for (HashrateModel model : hashrates) {
@@ -255,7 +256,7 @@ public class DatabaseManager {
 	 * 
 	 * @param host
 	 */
-	public void deleteUser(String username) {
+	public synchronized void deleteUser(String username) {
 		List<HashrateModel> hashrates = getUserHashrate(username);
 		if (hashrates != null) {
 			for (HashrateModel model : hashrates) {
@@ -278,7 +279,7 @@ public class DatabaseManager {
 	 *            may be null, else a timestamp in seconds from Epoch
 	 * @return
 	 */
-	public List<HashrateModel> getUserHashrate(final String username, Long startTimestamp, Long endTimestamp) {
+	public synchronized List<HashrateModel> getUserHashrate(final String username, Long startTimestamp, Long endTimestamp) {
 		final Long startTimestampMs = startTimestamp != null ? startTimestamp * 1000L : null;
 		final Long endTimestampMs = endTimestamp != null ? endTimestamp * 1000L : null;
 		return userDatabase.query(new Predicate<HashrateModel>() {
