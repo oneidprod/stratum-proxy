@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import com.db4o.Db4oEmbedded;
 import com.db4o.ObjectContainer;
+import com.db4o.defragment.Defragment;
+import com.db4o.defragment.DefragmentConfig;
 import com.db4o.query.Predicate;
 
 import strat.mining.stratum.proxy.configuration.ConfigurationManager;
@@ -91,6 +93,35 @@ public class DatabaseManager {
 			instance.closeAllDBs();
 			instance = null;
 		}
+	}
+
+	public synchronized void defragment() {
+		long poolBefore = poolDatabaseFile.length();
+		long userBefore = userDatabaseFile.length();
+		LOGGER.info("Starting database defragmentation. dbpools={} bytes, dbusers={} bytes", poolBefore, userBefore);
+
+		poolDatabase.close();
+		userDatabase.close();
+
+		try {
+			DefragmentConfig poolConfig = new DefragmentConfig(poolDatabaseFile.getAbsolutePath());
+			poolConfig.forceBackupDelete(true);
+			Defragment.defrag(poolConfig);
+
+			DefragmentConfig userConfig = new DefragmentConfig(userDatabaseFile.getAbsolutePath());
+			userConfig.forceBackupDelete(true);
+			Defragment.defrag(userConfig);
+		} catch (Exception e) {
+			LOGGER.error("Error during defragmentation.", e);
+		} finally {
+			poolDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), poolDatabaseFile.getAbsolutePath());
+			userDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), userDatabaseFile.getAbsolutePath());
+		}
+
+		long poolAfter = poolDatabaseFile.length();
+		long userAfter = userDatabaseFile.length();
+		LOGGER.info("Defragmentation complete. dbpools={} bytes, dbusers={} bytes. Reclaimed={} bytes",
+				poolAfter, userAfter, (poolBefore + userBefore) - (poolAfter + userAfter));
 	}
 
 	/**
