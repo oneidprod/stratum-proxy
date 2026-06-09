@@ -71,7 +71,7 @@ done
 
 ## Session Log
 
-### Session 2 - next
+### Session 2 - next (Session 2)
 
 ### Session 1 - 2026-06-09 (complete)
 
