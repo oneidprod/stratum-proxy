@@ -18,9 +18,16 @@ assemblies/         - Maven assembly descriptors
 
 ## Build
 
+Requires Java 11 JDK to compile (temurin-11-jdk-amd64). Proxies must RUN on Java 8 JRE (temurin-8-jre-amd64) — Jersey 2.14 has runtime errors on Java 11.
+
 ```bash
-mvn clean package
+JAVA_HOME=/usr/lib/jvm/temurin-11-jdk-amd64 mvn clean package -q
 # Output jar: target/stratum-proxy-0.8.1.jar
+```
+
+To set default java back to Java 8 after installing temurin-11-jdk:
+```bash
+sudo update-alternatives --set java /usr/lib/jvm/temurin-8-jre-amd64/bin/java
 ```
 
 ## Deploy
@@ -58,11 +65,17 @@ done
 
 ## Backlog
 
-- Add periodic db4o defragmentation to prevent memory growth (see `docs/superpowers/plans/2026-06-09-db4o-defrag.md`)
+- Fix partial defrag logging: split try/catch per-database in `defragment()` so failures identify which file failed (`DatabaseManager.java:~106`)
+- Merge `feature/db4o-defrag` to master after above fix
+- Set system default java back to Java 8: `sudo update-alternatives --set java /usr/lib/jvm/temurin-8-jre-amd64/bin/java`, then restart all 17 proxy services
 
 ## Session Log
 
-### Session 1 - 2026-06-09
+### Session 2 - next
+
+### Session 1 - 2026-06-09 (complete)
 - Diagnosed memory growth: db4o never reclaims space after record deletion
 - Decided on periodic defrag via `DatabaseManager.defragment()` + daily timer in `HashrateRecorder`
-- Created CLAUDE.md and implementation plan
+- Implemented all 4 tasks on branch `feature/db4o-defrag`: synchronized DatabaseManager, added defragment(), daily HashrateRecorder timer, built and deployed jar to all 17 instances
+- Discovered installing temurin-11-jdk changed system default java to 11 — proxies run but show Jersey HK2 warnings; need to switch back to Java 8 JRE
+- Two items remain before merge: partial defrag logging fix + java default fix + final restart
