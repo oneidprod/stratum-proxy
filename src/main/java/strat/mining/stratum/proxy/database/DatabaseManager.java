@@ -100,10 +100,10 @@ public class DatabaseManager {
 		long userBefore = userDatabaseFile.length();
 		LOGGER.info("Starting database defragmentation. dbpools={} bytes, dbusers={} bytes", poolBefore, userBefore);
 
-		poolDatabase.close();
-		userDatabase.close();
-
 		try {
+			poolDatabase.close();
+			userDatabase.close();
+
 			DefragmentConfig poolConfig = new DefragmentConfig(poolDatabaseFile.getAbsolutePath());
 			poolConfig.forceBackupDelete(true);
 			Defragment.defrag(poolConfig);
@@ -114,8 +114,18 @@ public class DatabaseManager {
 		} catch (Exception e) {
 			LOGGER.error("Error during defragmentation.", e);
 		} finally {
-			poolDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), poolDatabaseFile.getAbsolutePath());
-			userDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), userDatabaseFile.getAbsolutePath());
+			try {
+				poolDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), poolDatabaseFile.getAbsolutePath());
+			} catch (Exception e) {
+				LOGGER.error("Failed to reopen pool database after defragmentation. Application will exit.", e);
+				System.exit(1);
+			}
+			try {
+				userDatabase = Db4oEmbedded.openFile(Db4oEmbedded.newConfiguration(), userDatabaseFile.getAbsolutePath());
+			} catch (Exception e) {
+				LOGGER.error("Failed to reopen user database after defragmentation. Application will exit.", e);
+				System.exit(1);
+			}
 		}
 
 		long poolAfter = poolDatabaseFile.length();
