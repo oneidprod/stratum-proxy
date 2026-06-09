@@ -103,7 +103,7 @@ public class HashrateRecorder {
 					LOGGER.info("Running scheduled database defragmentation.");
 					databaseManager.defragment();
 				} catch (Exception e) {
-					LOGGER.error("Error during scheduled database defragmentation.", e);
+					LOGGER.warn("Unexpected error in defrag task; will reschedule.", e);
 				}
 				scheduleDefragTask();
 			}
