@@ -140,6 +140,8 @@ public class DatabaseManager {
 		long userAfter = userDatabaseFile.length();
 		LOGGER.info("Defragmentation complete. dbpools={} bytes, dbusers={} bytes. Reclaimed={} bytes",
 				poolAfter, userAfter, (poolBefore + userBefore) - (poolAfter + userAfter));
+
+		System.gc();
 	}
 
 	/**
