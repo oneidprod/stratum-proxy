@@ -65,13 +65,28 @@ done
 
 ## Backlog
 
-- Fix partial defrag logging: split try/catch per-database in `defragment()` so failures identify which file failed (`DatabaseManager.java:~106`)
-- Merge `feature/db4o-defrag` to master after above fix
-- Set system default java back to Java 8: `sudo update-alternatives --set java /usr/lib/jvm/temurin-8-jre-amd64/bin/java`, then restart all 17 proxy services
+- Check RSS 24h after defrag fires -- compare against `/home/mine/proxs/rss-baseline-2026-06-10.md` (baseline ~3.8 GB total)
+- Recheck command: `ps aux | grep "stratum-proxy.jar" | grep -v grep | awk '{printf "%-30s RSS: %d MB\n", $NF, $6/1024}' | sed 's|/home/mine/proxs/||;s|/stratum-proxy.jar||'`
 
 ## Session Log
 
-### Session 2 - next (Session 2)
+### Session 4 - next
+
+### Session 3 - 2026-06-10 (complete)
+
+- Merged feature/db4o-defrag to master, pushed to origin
+- Deleted 565 stale `database_*` backup dirs and 14 `database-bkup` dirs across all instances
+- Added `-XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10` to all 17 systemd service files
+- Added `System.gc()` after defrag in `DatabaseManager.defragment()`, built and deployed
+- RSS dropped from ~13.5 GB → ~3.8 GB total across all instances after restart with new JVM flags
+- Baseline saved to `/home/mine/proxs/rss-baseline-2026-06-10.md`
+
+### Session 2 - 2026-06-09 (complete)
+
+- Fixed per-database defrag logging: split try/catch in `defragment()` so pool and user failures log independently
+- Built and deployed updated jar to all 23 proxy instances
+- Restored Java 8 as system default (`temurin-8-jre-amd64`), restarted all 17 active services, logs clean
+- Merged `feature/db4o-defrag` to master and pushed to origin
 
 ### Session 1 - 2026-06-09 (complete)
 
